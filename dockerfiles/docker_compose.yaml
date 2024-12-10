@@ -84,7 +84,7 @@ services:
     environment:
       - POSTGRES_USER=root 
       - POSTGRES_PASSWORD=root
-      - POSTGRES_DB=CUSTOMERS_DWH
+      - POSTGRES_DB=github_repos_db
     volumes:
       - /home/ataa/Media/projects/Github_most_popular_repos/db_data/:/var/lib/postgresql/data:rw"
     
