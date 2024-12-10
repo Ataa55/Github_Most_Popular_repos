@@ -3,5 +3,5 @@ POSTGRS_CREDENTIALS = {
     "PORT":5432,
     "USER":"root",
     "PASSWORD":"root",
-    "db":"github_repos_DWH"
+    "db":"github_repos_db"
 }
