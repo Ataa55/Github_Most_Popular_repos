@@ -1,0 +1,112 @@
+
+services:
+  spark_master:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: spark_master
+    environment:
+      SPARK_MODE: master
+      SPARK_RPC_AUTHENTICATION_ENABLED: no
+      SPARK_RPC_ENCRYPTION_ENABLED: no
+      SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED: no
+      SPARK_SSL_ENABLED: no
+      SPARK_USER: spark
+    hostname: spark-service
+    command: 
+          sh -c '(/opt/bitnami/spark/sbin/start-master.sh &) &&
+                 (jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root)'
+    ports:
+      - 7070:7077 # SPARK_MASTER_PORT at localhost:7077
+      - 9090:8080 # SPARK_MASTER_WEBUI_PORT at localhost:9090
+      - 8888:8888 # Jupyter at localhost:8888
+    volumes:
+      - /home/ataa/Media/projects/Github_most_popular_repos/dockerfiles:/home/dockerfiles
+      - /home/ataa/Media/projects/Github_most_popular_repos/data:/home/data
+      - /home/ataa/Media/projects/Github_most_popular_repos/scripts:/home/scripts 
+      - /home/ataa/Media/projects/Github_most_popular_repos/jars/postgresql-42.2.18.jar:/opt/spark/jars/postgresql-42.2.18.jar
+
+    networks:
+      spark_net:
+
+  spark_worker_1:
+    image: spark_master:latest
+    container_name: spark_worker_1
+    hostname: spark-worker-1
+    command: /opt/bitnami/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-service:7077
+    depends_on: 
+      - spark_master
+    environment:
+      SPARK_MODE: worker
+      SPARK_WORKER_CORES: 1
+      SPARK_WORKER_MEMORY: 4G
+      SPARK_MASTER_URL: spark://spark-service:7077
+      SPARK_RPC_AUTHENTICATION_ENABLED: no
+      SPARK_RPC_ENCRYPTION_ENABLED: no
+      SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED: no
+      SPARK_SSL_ENABLED: no
+      SPARK_USER: spark
+    volumes:
+      - /home/ataa/Media/projects/Github_most_popular_repos/dockerfiles:/home/dockerfiles
+      - /home/ataa/Media/projects/Github_most_popular_repos/data:/home/data
+      - /home/ataa/Media/projects/Github_most_popular_repos/scripts:/home/scripts 
+
+    networks:
+      spark_net:
+
+  
+  spark_worker_2:
+    image: spark_master:latest  # bitnami/spark:3.5.0
+    container_name: spark_worker_2
+    hostname: spark-worker-2
+    command: /opt/bitnami/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-service:7077
+    depends_on: 
+      - spark_master
+    environment:
+      SPARK_MODE: worker
+      SPARK_WORKER_CORES: 1
+      SPARK_WORKER_MEMORY: 4G
+      SPARK_MASTER_URL: spark://spark-service:7077 
+
+    volumes:
+      - /home/ataa/Media/projects/Github_most_popular_repos/dockerfiles:/home/dockerfiles
+      - /home/ataa/Media/projects/Github_most_popular_repos/data:/home/data
+      - /home/ataa/Media/projects/Github_most_popular_repos/scripts:/home/scripts 
+
+
+    networks:
+      spark_net:
+ 
+
+  postgres:
+    image: postgres:13
+
+    environment:
+      - POSTGRES_USER=root 
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=CUSTOMERS_DWH
+    volumes:
+      - /home/ataa/Media/projects/Github_most_popular_repos/db_data/:/var/lib/postgresql/data:rw"
+    
+    ports:
+      - "5432:5432"
+    
+    networks:
+      spark_net:
+    
+  pgadmin:
+
+    image: dpage/pgadmin4
+
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=root
+      
+    ports:
+      - 80:80
+
+    networks:
+      spark_net:
+
+networks:
+  spark_net:
